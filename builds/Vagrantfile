@@ -1,0 +1,9 @@
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "file://virtualbox-centos7.box"
+  config.vm.network :private_network, ip: "10.10.10.10"
+  config.vbguest.auto_update = true
+  config.vm.network :forwarded_port, guest: 22, host: 22022
+  config.ssh.private_key_path = "priv-key"
+
+end

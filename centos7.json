@@ -1,19 +1,29 @@
 {
+  "variables": {
+    "drive_size": "12288"
+  },
   "provisioners": [
     {
-      "type": "shell",
-      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
-      "script": "scripts/ansible.sh"
+      "type": "file",
+      "source": "./ssh/pub-key",
+      "destination": "/tmp/pub-key"
     },
     {
-      "type": "ansible-local",
-      "playbook_file": "ansible/main.yml",
-      "galaxy_file": "requirements.yml"
+      "type": "file",
+      "source": "./ssh/priv-key",
+      "destination": "/tmp/priv-key"
     },
     {
       "type": "shell",
       "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
-      "script": "scripts/cleanup.sh"
+      "scripts": ["scripts/ssh.sh", "scripts/ansible.sh", "scripts/reboot.sh"],
+      "expect_disconnect": true
+    },
+    {
+      "type": "shell",
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "scripts": ["scripts/vbox-guest-additions.sh", "scripts/cleanup.sh"],
+      "expect_disconnect": true
     }
   ],
   "builders": [
@@ -22,14 +32,13 @@
       "boot_command": [
         "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks.cfg<enter><wait>"
       ],
-      "boot_wait": "10s",
-      "disk_size": 81920,
+      "disk_size": "{{user `drive_size`}}",
       "guest_os_type": "RedHat_64",
       "headless": true,
       "http_directory": "http",
       "iso_urls": [
         "CentOS-7-x86_64-Minimal-1708.iso",
-        "http://mirrors.ocf.berkeley.edu/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso"
+        "http://centos.ip-connect.vn.ua/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso"
       ],
       "iso_checksum_type": "sha256",
       "iso_checksum": "bba314624956961a2ea31dd460cd860a77911c1e0a56e4820a12b9c5dad363f5",
@@ -46,7 +55,7 @@
           "modifyvm",
           "{{.Name}}",
           "--memory",
-          "512"
+          "4096"
         ],
         [
           "modifyvm",
